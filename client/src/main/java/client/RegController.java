@@ -40,4 +40,10 @@ public class RegController {
     public void addMessage(String msg) {
         textArea.appendText(msg+"\n");
     }
+
+    public void tryToChangeNick(ActionEvent actionEvent) {
+        controller.tryToChangeNick(loginField.getText().trim()
+                , passwordField.getText().trim()
+                , nicknameField.getText().trim());
+    }
 }
