@@ -8,7 +8,7 @@ import java.util.Vector;
 
 public class Server {
     private List<ClientHandler> clients;
-    private AuthService authService;
+    private DBAuthService authService;
 
     public AuthService getAuthService() {
         return authService;
@@ -16,7 +16,7 @@ public class Server {
 
     public Server() {
         clients = new Vector<>();
-        authService = new SimpleAuthService();
+        authService = new DBAuthService();
 
         ServerSocket server = null;
         Socket socket;

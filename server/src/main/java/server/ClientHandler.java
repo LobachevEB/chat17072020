@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.sql.SQLException;
 
 public class ClientHandler {
     Server server;
@@ -24,7 +25,7 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-                    socket.setSoTimeout(5000);
+                    socket.setSoTimeout(120000);
 
                     //цикл аутентификации
                     while (true) {
@@ -35,10 +36,17 @@ public class ClientHandler {
                             if (token.length < 3) {
                                 continue;
                             }
-                            String newNick = server
-                                    .getAuthService()
-                                    .getNicknameByLoginAndPassword(token[1], token[2]);
-                            login = token[1];
+                            String newNick = null;
+                            try {
+                                newNick = server
+                                        .getAuthService()
+                                        .getNicknameByLoginAndPassword(token[1], token[2]);
+                                login = token[1];
+
+                            }
+                            catch (SQLException e){
+                                e.printStackTrace();
+                            }
                             if (newNick != null) {
                                 if (!server.isLoginAuthorized(login)) {
                                     sendMsg("/authok " + newNick);
@@ -60,14 +68,41 @@ public class ClientHandler {
                             if (token.length < 4) {
                                 continue;
                             }
-                            boolean b = server.getAuthService()
-                                    .registration(token[1],token[2],token[3]);
+                            boolean b = false;
+                            try {
+                                b = server.getAuthService()
+                                        .registration(token[1],token[2],token[3]);
+                            }
+                            catch (SQLException e){
+                                e.printStackTrace();
+                            }
                             if(b){
                                 sendMsg("/regresult ok");
                             }else{
                                 sendMsg("/regresult failed");
                             }
                         }
+
+                        if (str.startsWith("/cngnick ")) {
+                            String[] token = str.split("\\s");
+                            if (token.length < 4) {
+                                continue;
+                            }
+                            boolean b = false;
+                            try {
+                                b = server.getAuthService()
+                                        .changeNickname(token[1],token[2],token[3]);
+                            }
+                            catch (SQLException e){
+                                e.printStackTrace();
+                            }
+                            if(b){
+                                sendMsg("/regresult ok");
+                            }else{
+                                sendMsg("/regresult failed");
+                            }
+                        }
+
                     }
 
 

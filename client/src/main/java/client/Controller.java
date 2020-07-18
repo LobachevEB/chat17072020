@@ -24,6 +24,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -57,8 +60,13 @@ public class Controller implements Initializable {
     private Stage stage;
     private Stage regStage;
     RegController regController;
+    private DBInteraction dbInteraction = null;
+    private String login;
 
     public void setAuthenticated(boolean authenticated) {
+        if(authenticated){
+            login = loginField.getText().trim();
+        }
         this.authenticated = authenticated;
         authPanel.setVisible(!authenticated);
         authPanel.setManaged(!authenticated);
@@ -71,11 +79,39 @@ public class Controller implements Initializable {
         }
         setTitle(nick);
         textArea.clear();
+        if(authenticated){
+            fillMsgHistory();
+        }
+    }
+
+    private void fillMsgHistory(){
+        List<String> msg = new ArrayList<>();
+        try {
+            if(dbInteraction != null) {
+                dbInteraction.getMessageHistory(msg, login);
+                for (int i = 0; i < msg.size(); i++) {
+                    textArea.appendText(msg.get(i) + "\n");
+                }
+            }
+            else  {
+                textArea.appendText("История сообщений недоступна!\n");
+            }
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Platform.runLater(() -> {
+            try {
+                dbInteraction = new DBInteraction();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+
             stage = (Stage) textField.getScene().getWindow();
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
@@ -153,6 +189,13 @@ public class Controller implements Initializable {
                             }
 
                         } else {
+                            try {
+                                if(dbInteraction != null) {
+                                    dbInteraction.addToMessageHistory(login, str);
+                                }
+                            } catch (SQLException throwables) {
+                                throwables.printStackTrace();
+                            }
                             textArea.appendText(str + "\n");
                         }
                     }
@@ -249,6 +292,18 @@ public class Controller implements Initializable {
 
         try {
             out.writeUTF(String.format("/reg %s %s %s", login, password, nickname));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void tryToChangeNick(String login, String password, String newNickname) {
+        if (socket == null || socket.isClosed()) {
+            connect();
+        }
+
+        try {
+            out.writeUTF(String.format("/cngnick %s %s %s", login, password, newNickname));
         } catch (IOException e) {
             e.printStackTrace();
         }

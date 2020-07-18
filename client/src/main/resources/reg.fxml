@@ -15,7 +15,8 @@
     <TextArea fx:id="textArea" VBox.vgrow="ALWAYS" editable="false"/>
     <HBox>
         <Button text="Создать аккаунт" onAction="#tryToReg" minWidth="50"/>
-        <Button text="Отмена" onAction="#clickCancelBtn" minWidth="50"/>
+        <Button text="Изменить ник" onAction="#tryToChangeNick" minWidth="50"/>
+        <Button text="Закрыть" onAction="#clickCancelBtn" minWidth="50"/>
     </HBox>
 
 
